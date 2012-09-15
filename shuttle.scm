@@ -1,4 +1,4 @@
-(use posix srfi-1)
+(use posix srfi-1 matchable)
 (include "hid.scm")
 
 (define PACKET-LENGTH 5)
@@ -36,9 +36,7 @@
 
 ; Wrap all the inputs into a single list
 (define (shuttle-state packet)
-  (list (ring-position packet)
-        (jog-position packet)
-        (button-states packet)))
+  (list (ring-position packet) (jog-position packet) (button-states packet)))
 
 ; Since the jog wheel always tells us that it has changed by one, we only need
 ; two bits of data to work out which direction it moved in.
@@ -51,18 +49,17 @@
 ; Compare the previous and current states, work out what's changed, and do
 ; something about it.
 (define (compare-states prev curr)
-  (let* ((ring-moved? (not (= (first curr) (first prev))))
-         (jog-diff (wrapdiff (second prev) (second curr)))
-         (jog-moved? (not (zero? jog-diff))))
-    (if ring-moved? (print "ring " (first curr)))
+  (match-let* (((ring-p jog-p buttons-p) prev)
+               ((ring-c jog-c buttons-c) curr)
+               (ring-moved? (not (= ring-p ring-c)))
+               (jog-diff (wrapdiff jog-p jog-c))
+               (jog-moved? (not (zero? jog-diff))))
+    (if ring-moved? (print "ring " ring-c))
     (if jog-moved? (print "jog " jog-diff))
     (for-each
-      (lambda (pci) ; Oh I wish I had a destructuring bind
-        (let ((p (first pci))
-              (c (second pci))
-              (i (third pci)))
+      (match-lambda ((p c i)
           (if (not (= p c)) (print "button " i " " c))))
-      (zip (third prev) (third curr) '(1 2 3 4 5)))))
+      (zip buttons-c buttons-p '(1 2 3 4 5)))))
 
 ; Open every accessible device matching pattern and return the file descriptor
 ; for those that are ShuttleXpress-es
