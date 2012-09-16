@@ -36,8 +36,7 @@
 ; two bits of data to work out which direction it moved in.
 (define (wrapdiff prev curr)
   (let* ((p (modulo prev 4))
-         (c (modulo curr 4))
-         (r '(0 1 0 -1)))
+         (c (modulo curr 4)))
     (decode-2s-c 2 (modulo (- c p) 4))))
 
 ; Compare the previous and current states, work out what's changed, and do
