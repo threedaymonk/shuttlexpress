@@ -70,7 +70,9 @@
 ; Find the first accessible ShuttleXpress (if any) and process input
 (let ((fd (shuttle-fd)))
   (if fd
-    (process-input fd)
+    (handle-exceptions exn
+      (print "Device unplugged")
+      (process-input fd))
     (begin
       (print "No ShuttleXpress devices found")
       (exit))))
