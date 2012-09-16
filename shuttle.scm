@@ -1,9 +1,9 @@
 (use posix srfi-1 matchable)
-(include "hid.scm")
 (include "support.scm")
 
 (define PACKET-LENGTH 5)
 (define SHUTTLE-ID #x0b330020)
+(define DEVICE "/dev/shuttlexpress")
 
 ; Does this file descriptor refer to a ShuttleXpress?
 (define (is-shuttle? fd)
@@ -52,12 +52,12 @@
         (if (not= p c) (print "button " i " " c))))
       (zip buttons-c buttons-p '(1 2 3 4 5)))))
 
-; Open every accessible device matching pattern and return the file descriptor
-; for those that are ShuttleXpress-es
-(define (shuttle-fds pattern)
-  (filter is-shuttle?
-          (map (lambda (path) (file-open path open/rdonly))
-               (filter file-read-access? (glob pattern)))))
+; Attempt to find and open the ShuttleXpress.
+; Returns #f on failure.
+(define (shuttle-fd)
+  (if (file-read-access? DEVICE)
+    (file-open DEVICE open/rdonly)
+    #f))
 
 ; Busy loop on select while waiting for input
 (define (process-input fd)
@@ -68,9 +68,9 @@
       (loop current))))
 
 ; Find the first accessible ShuttleXpress (if any) and process input
-(let ((fds (shuttle-fds "/dev/shuttlexpress")))
-  (if (null? fds)
+(let ((fd (shuttle-fd)))
+  (if fd
+    (process-input fd)
     (begin
       (print "No ShuttleXpress devices found")
-      (exit))
-    (process-input (car fds))))
+      (exit))))
