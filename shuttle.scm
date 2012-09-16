@@ -32,12 +32,12 @@
 (define (shuttle-state packet)
   (list (ring-position packet) (jog-position packet) (button-states packet)))
 
-; Since the jog wheel always tells us that it has changed by one, we only need
-; two bits of data to work out which direction it moved in.
+; The jog position is an integer between 0 and 255, so we must compare it with
+; the previous value to work out if it has moved. Taking the difference modulo
+; 256 as a two's complement value gives us a relative movement that wraps
+; around 255/0.
 (define (wrapdiff prev curr)
-  (let* ((p (modulo prev 4))
-         (c (modulo curr 4)))
-    (decode-2s-c 2 (modulo (- c p) 4))))
+  (decode-2s-c 8 (modulo (- curr prev) 256)))
 
 ; Compare the previous and current states, work out what's changed, and do
 ; something about it.
