@@ -1,15 +1,9 @@
 (use posix srfi-1 matchable)
 (include "hid.scm")
+(include "support.scm")
 
 (define PACKET-LENGTH 5)
 (define SHUTTLE-ID #x0b330020)
-
-; Interpret a two's complement value stored in an unsigned integer as a
-; signed value
-(define (decode-2s-c bits value)
-  (let ((threshold (expt 2 (- bits 1)))
-        (adjustment (expt 2 bits)))
-    (if (< value threshold) value (- value adjustment))))
 
 ; Does this file descriptor refer to a ShuttleXpress?
 (define (is-shuttle? fd)
@@ -18,7 +12,7 @@
 ; Read a packet from the controller and return a list of byte values
 (define (read-packet fd)
   (map char->integer
-       (string->list (car (file-read fd PACKET-LENGTH)))))
+       (string->list (first (file-read fd PACKET-LENGTH)))))
 
 ; Return a list of the buttons: 1 for pressed, 0 for released
 ; As there's no overlap between the bit masks for the two bytes used to
@@ -48,17 +42,15 @@
 
 ; Compare the previous and current states, work out what's changed, and do
 ; something about it.
-(define (compare-states prev curr)
-  (match-let* (((ring-p jog-p buttons-p) prev)
-               ((ring-c jog-c buttons-c) curr)
-               (ring-moved? (not (= ring-p ring-c)))
-               (jog-diff (wrapdiff jog-p jog-c))
-               (jog-moved? (not (zero? jog-diff))))
-    (if ring-moved? (print "ring " ring-c))
-    (if jog-moved? (print "jog " jog-diff))
+(define (compare-states previous current)
+  (match-let* (((ring-p jog-p buttons-p) previous)
+               ((ring-c jog-c buttons-c) current)
+               (jog-diff (wrapdiff jog-p jog-c)))
+    (if (not= ring-p ring-c) (print "ring " ring-c))
+    (if (nonzero? jog-diff) (print "jog " jog-diff))
     (for-each
       (match-lambda ((p c i)
-          (if (not (= p c)) (print "button " i " " c))))
+          (if (not= p c) (print "button " i " " c))))
       (zip buttons-c buttons-p '(1 2 3 4 5)))))
 
 ; Open every accessible device matching pattern and return the file descriptor
