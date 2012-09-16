@@ -64,7 +64,9 @@
   (let loop ((previous #f))
     (file-select fd #f)
     (handle-exceptions exn
-      (unless ((condition-predicate 'i/o) exn) (abort exn))
+      (if ((condition-predicate 'i/o) exn)
+        (file-close fd)
+        (abort exn))
       (let ((current (shuttle-state (read-packet fd))))
         (if previous (compare-states previous current))
         (loop current)))))
