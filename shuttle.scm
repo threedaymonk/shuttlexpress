@@ -68,7 +68,7 @@
       (loop current))))
 
 ; Find the first accessible ShuttleXpress (if any) and process input
-(let ((fds (shuttle-fds "/dev/hidraw*")))
+(let ((fds (shuttle-fds "/dev/shuttlexpress")))
   (if (null? fds)
     (begin
       (print "No ShuttleXpress devices found")
