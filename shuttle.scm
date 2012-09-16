@@ -49,7 +49,7 @@
     (if (nonzero? jog-diff) (print "jog " jog-diff))
     (for-each
       (match-lambda ((p c i)
-          (if (not= p c) (print "button " i " " c))))
+        (if (not= p c) (print "button " i " " c))))
       (zip buttons-c buttons-p '(1 2 3 4 5)))))
 
 ; Open every accessible device matching pattern and return the file descriptor
