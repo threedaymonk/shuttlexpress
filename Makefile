@@ -1,6 +1,6 @@
 .PHONY: clean
 
-shuttle: shuttle.scm support.scm hid.scm
+shuttle: shuttle.scm support.scm
 	csc shuttle.scm
 
 clean:
