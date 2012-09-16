@@ -68,11 +68,13 @@
       (loop current))))
 
 ; Find the first accessible ShuttleXpress (if any) and process input
-(let ((fd (shuttle-fd)))
-  (if fd
+(let loop ((fd (shuttle-fd)))
+  (when fd
+    (print "Device found")
     (handle-exceptions exn
-      (print "Device unplugged")
-      (process-input fd))
-    (begin
-      (print "No ShuttleXpress devices found")
-      (exit))))
+      (if ((condition-predicate 'i/o) exn)
+        (print "Device unplugged")
+        (abort exn))
+      (process-input fd)))
+  (sleep 1)
+  (loop (shuttle-fd)))
