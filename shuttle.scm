@@ -63,18 +63,17 @@
 (define (process-input fd)
   (let loop ((previous #f))
     (file-select fd #f)
-    (let ((current (shuttle-state (read-packet fd))))
-      (if previous (compare-states previous current))
-      (loop current))))
+    (handle-exceptions exn
+      (unless ((condition-predicate 'i/o) exn) (abort exn))
+      (let ((current (shuttle-state (read-packet fd))))
+        (if previous (compare-states previous current))
+        (loop current)))))
 
-; Find the first accessible ShuttleXpress (if any) and process input
+; Process input from the connected device.
 (let loop ((fd (shuttle-fd)))
   (when fd
     (print "Device found")
-    (handle-exceptions exn
-      (if ((condition-predicate 'i/o) exn)
-        (print "Device unplugged")
-        (abort exn))
-      (process-input fd)))
+    (process-input fd)
+    (print "Device unplugged"))
   (sleep 1)
   (loop (shuttle-fd)))
