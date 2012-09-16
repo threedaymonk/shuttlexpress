@@ -23,7 +23,7 @@
     (map (lambda (mask) (/ (bitwise-and mask bitfield) mask)) masks)))
 
 ; Current position of the ring (-7 to 7)
-(define (ring-position packet) (decode-2s-c 8 (first packet)))
+(define (ring-position packet) (twoc->signed 8 (first packet)))
 
 ; Current position of the jog wheel (0 to 255, rolling over)
 (define (jog-position packet) (second packet))
@@ -37,7 +37,7 @@
 ; 256 as a two's complement value gives us a relative movement that wraps
 ; around 255/0.
 (define (wrapdiff prev curr)
-  (decode-2s-c 8 (modulo (- curr prev) 256)))
+  (twoc->signed 8 (modulo (- curr prev) 256)))
 
 ; Compare the previous and current states, work out what's changed, and do
 ; something about it.
