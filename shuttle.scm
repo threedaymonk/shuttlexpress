@@ -49,7 +49,9 @@
   (match-let* (((ring-p jog-p buttons-p) previous)
                ((ring-c jog-c buttons-c) current)
                (jog-diff (wrapdiff jog-p jog-c)))
-    (if (not= ring-p ring-c) (handle-event "ring" ring-c))
+    (when (not= ring-p ring-c)
+      (handle-event "ring-absolute" ring-c)
+      (handle-event "ring-relative" (- ring-c ring-p)))
     (if (nonzero? jog-diff) (handle-event "jog" jog-diff))
     (for-each
       (match-lambda ((p c i)
