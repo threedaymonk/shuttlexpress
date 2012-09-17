@@ -11,8 +11,8 @@
 
 ; Read a packet from the controller and return a list of byte values
 (define (read-packet fd)
-  (map char->integer
-       (string->list (first (file-read fd PACKET-LENGTH)))))
+  (match-let (((buffer bytes-read) (file-read fd PACKET-LENGTH)))
+    (map char->integer (string->list buffer))))
 
 ; Return a list of the buttons: 1 for pressed, 0 for released
 ; As there's no overlap between the bit masks for the two bytes used to
@@ -55,9 +55,8 @@
 ; Attempt to find and open the ShuttleXpress.
 ; Returns #f on failure.
 (define (shuttle-fd)
-  (if (file-read-access? DEVICE)
-    (file-open DEVICE open/rdonly)
-    #f))
+  (and (file-read-access? DEVICE)
+       (file-open DEVICE open/rdonly)))
 
 ; Busy loop on select while waiting for input
 (define (process-input fd)
