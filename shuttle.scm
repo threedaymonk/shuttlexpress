@@ -1,4 +1,4 @@
-(use posix srfi-1 matchable)
+(use posix extras srfi-1 matchable)
 (include "support.scm")
 
 (define PACKET-LENGTH 5)
@@ -39,17 +39,21 @@
 (define (wrapdiff prev curr)
   (twoc->signed 8 (modulo (- curr prev) 256)))
 
+; Do something about an event. At the moment, that means display it.
+(define (handle-event . params)
+  (printf "~S~N" params))
+
 ; Compare the previous and current states, work out what's changed, and do
 ; something about it.
 (define (compare-states previous current)
   (match-let* (((ring-p jog-p buttons-p) previous)
                ((ring-c jog-c buttons-c) current)
                (jog-diff (wrapdiff jog-p jog-c)))
-    (if (not= ring-p ring-c) (print "ring " ring-c))
-    (if (nonzero? jog-diff) (print "jog " jog-diff))
+    (if (not= ring-p ring-c) (handle-event "ring" ring-c))
+    (if (nonzero? jog-diff) (handle-event "jog" jog-diff))
     (for-each
       (match-lambda ((p c i)
-        (if (not= p c) (print "button " i " " c))))
+        (if (not= p c) (handle-event "button" i c))))
       (zip buttons-c buttons-p '(1 2 3 4 5)))))
 
 ; Attempt to find and open the ShuttleXpress.
