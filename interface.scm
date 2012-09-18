@@ -44,12 +44,12 @@
                ((ring-c jog-c buttons-c) current)
                (jog-diff (wrapdiff jog-p jog-c)))
     (when (not= ring-p ring-c)
-      (handler "ring-absolute" ring-c)
-      (handler "ring-relative" (- ring-c ring-p)))
-    (if (nonzero? jog-diff) (handler "jog" jog-diff))
+      (handler (list "ring-absolute" ring-c))
+      (handler (list "ring-relative" (- ring-c ring-p))))
+    (if (nonzero? jog-diff) (handler (list "jog" jog-diff)))
     (for-each
       (match-lambda ((p c i)
-        (if (not= p c) (handler "button" i c))))
+        (if (not= p c) (handler (list "button" i c)))))
       (zip buttons-c buttons-p '(1 2 3 4 5)))))
 
 ; Attempt to find and open the ShuttleXpress.
