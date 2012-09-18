@@ -1,13 +1,15 @@
-(use posix extras srfi-1 matchable)
+(use posix extras srfi-1 srfi-4 matchable)
 (include "support.scm")
 
 (define PACKET-LENGTH 5)
 (define DEVICE "/dev/shuttlexpress")
 
 ; Read a packet from the controller and return a list of byte values
-(define (read-packet fd)
-  (match-let (((buffer bytes-read) (file-read fd PACKET-LENGTH)))
-    (map char->integer (string->list buffer))))
+(define (read-packet port)
+  (let* ((buffer (read-u8vector PACKET-LENGTH port))
+         (packet (u8vector->list buffer))
+         (bytes-read (u8vector-length buffer)))
+    (and (= bytes-read PACKET-LENGTH) packet)))
 
 ; Return a list of the buttons: 1 for pressed, 0 for released
 ; As there's no overlap between the bit masks for the two bytes used to
@@ -55,27 +57,25 @@
 
 ; Attempt to find and open the ShuttleXpress.
 ; Returns #f on failure.
-(define (shuttle-fd)
+(define (shuttle-port)
   (and (file-read-access? DEVICE)
-       (file-open DEVICE open/rdonly)))
+       (open-input-file DEVICE)))
 
 ; Busy loop on select while waiting for input
-(define (process-input fd)
+(define (process-input port)
   (let loop ((previous #f))
-    (file-select fd #f)
-    (handle-exceptions exn
-      (if ((condition-predicate 'i/o) exn)
-        (file-close fd)
-        (abort exn))
-      (let ((current (shuttle-state (read-packet fd))))
-        (if previous (compare-states previous current))
-        (loop current)))))
+    (let ((packet (read-packet port)))
+      (if packet
+        (let ((current (shuttle-state packet)))
+          (if previous (compare-states previous current))
+          (loop current))
+        (close-input-port port)))))
 
 ; Process input from the connected device.
-(let loop ((fd (shuttle-fd)))
-  (when fd
+(let loop ((port (shuttle-port)))
+  (when port
     (print "Device found")
-    (process-input fd)
+    (process-input port)
     (print "Device unplugged"))
   (sleep 1)
-  (loop (shuttle-fd)))
+  (loop (shuttle-port)))
