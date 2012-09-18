@@ -4,27 +4,29 @@
 (define PACKET-LENGTH 5)
 (define DEVICE "/dev/shuttlexpress")
 
-; Read a packet from the controller and return a list of byte values
+; Read a packet from the controller and return a list of byte values.
+; Returns #f if we didn't get a complete packet: this should only happen on
+; EOF, that is, the device was unplugged.
 (define (read-packet port)
   (let* ((packet (read-u8vector PACKET-LENGTH port))
          (bytes-read (u8vector-length packet)))
     (and (= bytes-read PACKET-LENGTH) packet)))
 
-; Return a list of the buttons: 1 for pressed, 0 for released
+; Return a list of the buttons: 1 for pressed, 0 for released.
 ; As there's no overlap between the bit masks for the two bytes used to
-; indicate button presses, we can just add them together
+; indicate button presses, we can just add them together.
 (define (button-states packet)
   (let ((bitfield (+ (u8vector-ref packet 3) (u8vector-ref packet 4)))
         (masks '(#x10 #x20 #x40 #x80 #x1)))
     (map (lambda (mask) (/ (bitwise-and mask bitfield) mask)) masks)))
 
-; Current position of the ring (-7 to 7)
+; Current position of the ring (-7 to 7).
 (define (ring-position packet) (twoc->signed 8 (u8vector-ref packet 0)))
 
-; Current position of the jog wheel (0 to 255, rolling over)
+; Current position of the jog wheel (0 to 255, rolling over).
 (define (jog-position packet) (u8vector-ref packet 1))
 
-; Wrap all the inputs into a single list
+; Wrap all the inputs into a single list.
 (define (shuttle-state packet)
   (list (ring-position packet) (jog-position packet) (button-states packet)))
 
@@ -60,7 +62,7 @@
   (and (file-read-access? DEVICE)
        (open-input-file DEVICE)))
 
-; Busy loop on select while waiting for input
+; Wait (blocking) for a packet, then process it.
 (define (process-input port)
   (let loop ((previous #f))
     (let ((packet (read-packet port)))
