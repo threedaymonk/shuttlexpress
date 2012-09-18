@@ -2,12 +2,7 @@
 (include "support.scm")
 
 (define PACKET-LENGTH 5)
-(define SHUTTLE-ID #x0b330020)
 (define DEVICE "/dev/shuttlexpress")
-
-; Does this file descriptor refer to a ShuttleXpress?
-(define (is-shuttle? fd)
-  (= SHUTTLE-ID (hid-device-id fd)))
 
 ; Read a packet from the controller and return a list of byte values
 (define (read-packet fd)
