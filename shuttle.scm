@@ -37,23 +37,19 @@
 (define (wrapdiff prev curr)
   (twoc->signed 8 (modulo (- curr prev) 256)))
 
-; Do something about an event. At the moment, that means display it.
-(define (handle-event . params)
-  (printf "~S~N" params))
-
 ; Compare the previous and current states, work out what's changed, and do
 ; something about it.
-(define (compare-states previous current)
+(define (compare-states previous current handler)
   (match-let* (((ring-p jog-p buttons-p) previous)
                ((ring-c jog-c buttons-c) current)
                (jog-diff (wrapdiff jog-p jog-c)))
     (when (not= ring-p ring-c)
-      (handle-event "ring-absolute" ring-c)
-      (handle-event "ring-relative" (- ring-c ring-p)))
-    (if (nonzero? jog-diff) (handle-event "jog" jog-diff))
+      (handler "ring-absolute" ring-c)
+      (handler "ring-relative" (- ring-c ring-p)))
+    (if (nonzero? jog-diff) (handler "jog" jog-diff))
     (for-each
       (match-lambda ((p c i)
-        (if (not= p c) (handle-event "button" i c))))
+        (if (not= p c) (handler "button" i c))))
       (zip buttons-c buttons-p '(1 2 3 4 5)))))
 
 ; Attempt to find and open the ShuttleXpress.
@@ -63,20 +59,24 @@
        (open-input-file DEVICE)))
 
 ; Wait (blocking) for a packet, then process it.
-(define (process-input port)
+(define (process-input port handler)
   (let loop ((previous #f))
     (let ((packet (read-packet port)))
       (if packet
         (let ((current (shuttle-state packet)))
-          (if previous (compare-states previous current))
+          (if previous (compare-states previous current handler))
           (loop current))
         (close-input-port port)))))
 
 ; Process input from the connected device.
-(let loop ((port (shuttle-port)))
-  (when port
-    (print "Device found")
-    (process-input port)
-    (print "Device unplugged"))
-  (sleep 1)
-  (loop (shuttle-port)))
+(define (handle-shuttle-events handler)
+  (let loop ((port (shuttle-port)))
+    (when port
+      (print "Device found")
+      (process-input port handler)
+      (print "Device unplugged"))
+    (sleep 1)
+    (loop (shuttle-port))))
+
+(handle-shuttle-events (lambda (name . params)
+  (printf "~A ~S~N" name params)))
