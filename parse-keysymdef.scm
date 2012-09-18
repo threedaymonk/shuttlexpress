@@ -18,4 +18,4 @@
               (irregex-match-substring m 2)))
     (if line (loop))))
 
-(print ")))")
+(print ") string=? string-hash 2500))")
