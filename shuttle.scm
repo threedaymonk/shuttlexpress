@@ -1,4 +1,4 @@
-(use posix extras)
+(use extras)
 (include "interface.scm")
 (include "fake-keys")
 
