@@ -7,4 +7,4 @@ keysymdef.scm: parse-keysymdef.scm
 	csi -script $< > $@
 
 clean:
-	rm -f shuttle
+	rm -f shuttle keysymdef.scm
