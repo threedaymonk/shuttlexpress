@@ -5,15 +5,14 @@
 (foreign-declare "#include <X11/keysym.h>")
 
 (foreign-declare "
-  XKeyEvent createKeyEvent(Display *display, Window window,
-                           Window root_window, Bool press,
-                           int keysym, int modifiers
+  void sendKeyEvent(Display *display, Window window, Window root,
+                    Bool press, int keysym, int modifiers
   ) {
     XKeyEvent event;
 
     event.display     = display;
     event.window      = window;
-    event.root        = root_window;
+    event.root        = root;
     event.subwindow   = None;
     event.time        = CurrentTime;
     event.x           = 1;
@@ -25,28 +24,24 @@
     event.state       = modifiers;
     event.type        = (press) ? KeyPress : KeyRelease;
 
-    return event;
+    XSendEvent(event.display, event.window, True, KeyPressMask, (XEvent *)&event);
   }
   ")
 
 (define send-key-events
   (foreign-lambda* int ((int keysym) (int modifiers)) "
     Display *display;
-    Window root_window, focused_window;
-    XKeyEvent event;
+    Window root, focused;
     int revert;
 
-    display = XOpenDisplay(0);
+    display = XOpenDisplay(NULL);
     if (display == NULL) return -1;
 
-    root_window = XDefaultRootWindow(display);
-    XGetInputFocus(display, &focused_window, &revert);
+    root = XDefaultRootWindow(display);
+    XGetInputFocus(display, &focused, &revert);
 
-    event = createKeyEvent(display, focused_window, root_window, True, keysym, modifiers);
-    XSendEvent(event.display, event.window, True, KeyPressMask, (XEvent *)&event);
-
-    event = createKeyEvent(display, focused_window, root_window, False, keysym, modifiers);
-    XSendEvent(event.display, event.window, True, KeyPressMask, (XEvent *)&event);
+    sendKeyEvent(display, focused, root, True,  keysym, modifiers);
+    sendKeyEvent(display, focused, root, False, keysym, modifiers);
 
     XCloseDisplay(display);
     return 0;
