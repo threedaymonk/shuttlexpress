@@ -35,7 +35,7 @@
     int revert;
 
     display = XOpenDisplay(NULL);
-    if (display == NULL) return -1;
+    if (display == NULL) C_return(-1);
 
     root = XDefaultRootWindow(display);
     XGetInputFocus(display, &focused, &revert);
@@ -44,7 +44,7 @@
     sendKeyEvent(display, focused, root, False, keysym, modifiers);
 
     XCloseDisplay(display);
-    return 0;
+    C_return(0);
     "))
 
 (define xk-modifier-map
