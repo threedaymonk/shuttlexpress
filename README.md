@@ -2,16 +2,27 @@
 
 A program for responding to Contour ShuttleXpress events in Linux.
 
-At the moment, it simply parses the raw event packets and prints out a line
-for every state change. In the future, it will probably do something more
-useful.
+At the moment, events are hard-coded to simulated key presses in `shuttle.scm`
+but this will probably change.
 
 ## Requirements
 
 * Linux
 * Chicken Scheme
 * The **matchable** egg
+* Xlib headers
 * A Contour ShuttleXpress
 
-The device also needs to be accessible to the user running the program, via a
-udev rule or sudo.
+# Instructions
+
+Copy the udev rule to `/etc/udev/rules.d`:
+
+    sudo make udev
+
+Build it:
+
+    make
+
+Run it:
+
+    ./shuttle
