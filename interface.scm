@@ -1,5 +1,6 @@
-(use posix extras srfi-1 srfi-4 matchable)
-(include "support.scm")
+(module interface (handle-shuttle-events)
+(import chicken scheme)
+(use posix extras srfi-1 srfi-4 matchable support)
 
 (define PACKET-LENGTH 5)
 (define DEVICE "/dev/shuttlexpress")
@@ -77,3 +78,5 @@
       (print "Device unplugged"))
     (sleep 1)
     (loop (shuttle-port))))
+
+)

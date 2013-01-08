@@ -1,3 +1,5 @@
 shuttle
 *.c
+*.so
+*.import.scm
 keysymdef.scm

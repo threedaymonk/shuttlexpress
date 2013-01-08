@@ -6,7 +6,9 @@
       "XK_" ($ (+ (or alphanumeric "_"))) (+ whitespace)
       "0x" ($ (+ hex-digit))))
 
-(print "(define keysymdef (alist->hash-table '(")
+(print "(module keysymdef (keysymdef:table)")
+(print "(import scheme srfi-69)")
+(print "(define keysymdef:table (alist->hash-table '(")
 
 (let loop ()
   (let* ((line (read-line port))
@@ -19,3 +21,4 @@
     (if line (loop))))
 
 (print ") string=? string-hash 2500))")
+(print ")")

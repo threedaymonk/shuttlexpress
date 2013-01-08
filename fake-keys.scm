@@ -1,6 +1,6 @@
-(use posix extras srfi-69)
-(include "keysymdef.scm")
-
+(module fake-keys (fake-keypress)
+(import chicken scheme foreign)
+(use posix extras srfi-69 keysymdef)
 (foreign-declare "#include <X11/Xlib.h>")
 
 ; Send a simulated key event to the display and window.
@@ -84,9 +84,11 @@
 ; modifiers is a list of "Shift", "Control", and "Mod1" through "Mod5".
 ; Case is significant (because "a" is different to "A").
 (define (fake-keypress name . modifiers)
-  (let ((keysym (hash-table-ref keysymdef name))
+  (let ((keysym (hash-table-ref keysymdef:table name))
         (modmask (list->modifier-mask modifiers)))
     (with-x-display (lambda (disp)
       (with-focused-window disp (lambda (win)
         (send-key-event disp win #t keysym modmask)
         (send-key-event disp win #f keysym modmask)))))))
+
+)

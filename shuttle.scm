@@ -1,6 +1,4 @@
-(use extras)
-(include "interface.scm")
-(include "fake-keys")
+(use extras interface fake-keys)
 
 (define mapping
   '((("jog" -1) .           ("Left"))
